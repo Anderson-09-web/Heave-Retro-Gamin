@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { Route, Switch, Router as WouterRouter } from 'wouter';
+import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 
 import Landing from './pages/landing';
 import UserLogin from './pages/login';
@@ -26,14 +26,61 @@ import Giveaways from './pages/admin/giveaways';
 import AdminGames from './pages/admin/games';
 import Docs from './pages/admin/docs';
 
+// ── Error Boundary ─────────────────────────────────────────────────────────
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("App error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: "100vh", background: "#000", display: "flex",
+          alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "16px"
+        }}>
+          <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "12px", color: "#ff0000" }}>
+            ERROR
+          </p>
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "11px", color: "#555", maxWidth: "400px", textAlign: "center" }}>
+            {this.state.error?.message ?? "Algo salió mal."}
+          </p>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = "/"; }}
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "9px", color: "#00ffff", border: "1px solid #00ffff", padding: "10px 20px", background: "transparent", cursor: "pointer" }}
+          >
+            VOLVER AL INICIO
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ── QueryClient ─────────────────────────────────────────────────────────────
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 0,               // don't retry — fail fast so the UI responds immediately
       refetchOnWindowFocus: false,
+      staleTime: 30_000,
     },
   },
 });
+
+// ── Router ──────────────────────────────────────────────────────────────────
 
 function Router() {
   return (
@@ -44,25 +91,29 @@ function Router() {
       <Route path="/games" component={Games} />
       <Route path="/auth/discord/callback" component={DiscordCallback} />
 
-      {/* Admin routes */}
+      {/* Admin standalone login */}
       <Route path="/admin/login" component={Login} />
-      <Route path="/admin/*">
+
+      {/* Admin panel — `nest` makes /admin the base so sub-routes are relative.
+          This correctly matches /admin AND /admin/users AND /admin/anything. */}
+      <Route path="/admin" nest>
         <AdminLayout>
           <Switch>
-            <Route path="/admin" component={Dashboard} />
-            <Route path="/admin/users" component={Users} />
-            <Route path="/admin/api-keys" component={ApiKeys} />
-            <Route path="/admin/endpoints" component={Endpoints} />
-            <Route path="/admin/categories" component={Categories} />
-            <Route path="/admin/images" component={Images} />
-            <Route path="/admin/logs" component={Logs} />
-            <Route path="/admin/logs/errors" component={ErrorLogs} />
-            <Route path="/admin/services" component={Services} />
-            <Route path="/admin/backups" component={Backups} />
-            <Route path="/admin/config" component={Config} />
-            <Route path="/admin/giveaways" component={Giveaways} />
-            <Route path="/admin/games" component={AdminGames} />
-            <Route path="/admin/docs" component={Docs} />
+            <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/users" component={Users} />
+            <Route path="/api-keys" component={ApiKeys} />
+            <Route path="/endpoints" component={Endpoints} />
+            <Route path="/categories" component={Categories} />
+            <Route path="/images" component={Images} />
+            <Route path="/logs" component={Logs} />
+            <Route path="/logs/errors" component={ErrorLogs} />
+            <Route path="/services" component={Services} />
+            <Route path="/backups" component={Backups} />
+            <Route path="/config" component={Config} />
+            <Route path="/giveaways" component={Giveaways} />
+            <Route path="/games" component={AdminGames} />
+            <Route path="/docs" component={Docs} />
             <Route component={NotFound} />
           </Switch>
         </AdminLayout>
@@ -75,14 +126,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

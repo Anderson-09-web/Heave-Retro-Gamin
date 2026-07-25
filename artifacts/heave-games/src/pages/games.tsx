@@ -15,11 +15,13 @@ type User = {
 // ── Fallback game list ────────────────────────────────────────────────────────
 
 const DEMO_GAMES = [
-  { id: 1, name: "TIC TAC TOE", slug: "tictactoe", type: "turn_based", description: "Clásico X vs O. Juega solo contra la CPU o con un amigo.", active: true, playCount: 1240 },
+  { id: 1, name: "TIC TAC TOE", slug: "tictactoe", type: "turn_based", description: "Clásico X vs O. Solo o con un amigo.", active: true, playCount: 1240 },
   { id: 2, name: "CONNECT 4", slug: "connect4", type: "turn_based", description: "Sé el primero en conectar 4 fichas en fila.", active: true, playCount: 890 },
-  { id: 3, name: "UNO", slug: "uno", type: "card", description: "El juego de cartas más popular del mundo.", active: false, playCount: 2100 },
-  { id: 4, name: "CHESS", slug: "chess", type: "turn_based", description: "Ajedrez clásico online.", active: false, playCount: 550 },
-  { id: 5, name: "CHECKERS", slug: "checkers", type: "turn_based", description: "Damas. El juego de mesa clásico.", active: false, playCount: 320 },
+  { id: 3, name: "SNAKE", slug: "snake", type: "action", description: "Mueve la serpiente, come manzanas, no te choques.", active: true, playCount: 760 },
+  { id: 4, name: "MEMORY", slug: "memory", type: "puzzle", description: "Encuentra todos los pares ocultos. ¡Entrena tu memoria!", active: true, playCount: 430 },
+  { id: 5, name: "UNO", slug: "uno", type: "card", description: "El juego de cartas más popular del mundo.", active: false, playCount: 2100 },
+  { id: 6, name: "CHESS", slug: "chess", type: "turn_based", description: "Ajedrez clásico online.", active: false, playCount: 550 },
+  { id: 7, name: "CHECKERS", slug: "checkers", type: "turn_based", description: "Damas. El juego de mesa clásico.", active: false, playCount: 320 },
 ];
 
 const TYPE_COLORS: Record<string, string> = {
@@ -366,6 +368,228 @@ function Connect4({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── Snake ─────────────────────────────────────────────────────────────────────
+
+const CELL = 18;
+const GCOLS = 20;
+const GROWS = 16;
+type Pt = { x: number; y: number };
+
+function Snake({ onClose }: { onClose: () => void }) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const stateRef = React.useRef({
+    snake: [{ x: 10, y: 8 }, { x: 9, y: 8 }, { x: 8, y: 8 }] as Pt[],
+    dir: { x: 1, y: 0 } as Pt,
+    next: { x: 1, y: 0 } as Pt,
+    food: { x: 15, y: 8 } as Pt,
+    alive: true,
+    score: 0,
+    high: 0,
+  });
+  const [display, setDisplay] = React.useState({ score: 0, high: 0, alive: true });
+  const [started, setStarted] = React.useState(false);
+  const rafRef = React.useRef<number>(0);
+  const lastRef = React.useRef<number>(0);
+  const SPEED = 130;
+
+  const placeFood = (snake: Pt[]): Pt => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const f = { x: Math.floor(Math.random() * GCOLS), y: Math.floor(Math.random() * GROWS) };
+      if (!snake.some(s => s.x === f.x && s.y === f.y)) return f;
+    }
+  };
+
+  const draw = React.useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    const s = stateRef.current;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, GCOLS * CELL, GROWS * CELL);
+    ctx.strokeStyle = "rgba(0,255,255,0.04)";
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= GCOLS; x++) { ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, GROWS * CELL); ctx.stroke(); }
+    for (let y = 0; y <= GROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(GCOLS * CELL, y * CELL); ctx.stroke(); }
+    ctx.fillStyle = "#ff00ff"; ctx.shadowColor = "#ff00ff"; ctx.shadowBlur = 10;
+    ctx.fillRect(s.food.x * CELL + 3, s.food.y * CELL + 3, CELL - 6, CELL - 6);
+    ctx.shadowBlur = 0;
+    s.snake.forEach((seg, i) => {
+      const alpha = Math.max(0.3, 1 - i / s.snake.length * 0.7);
+      ctx.fillStyle = i === 0 ? "#00ffff" : `rgba(0,200,200,${alpha})`;
+      ctx.shadowColor = i === 0 ? "#00ffff" : "transparent";
+      ctx.shadowBlur = i === 0 ? 8 : 0;
+      ctx.fillRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2);
+    });
+    ctx.shadowBlur = 0;
+  }, []);
+
+  const tick = React.useCallback((ts: number) => {
+    if (ts - lastRef.current < SPEED) { rafRef.current = requestAnimationFrame(tick); return; }
+    lastRef.current = ts;
+    const s = stateRef.current;
+    if (!s.alive) return;
+    s.dir = { ...s.next };
+    const head = { x: (s.snake[0].x + s.dir.x + GCOLS) % GCOLS, y: (s.snake[0].y + s.dir.y + GROWS) % GROWS };
+    const ate = head.x === s.food.x && head.y === s.food.y;
+    if (s.snake.some(seg => seg.x === head.x && seg.y === head.y)) {
+      s.alive = false; s.high = Math.max(s.high, s.score);
+      setDisplay(d => ({ ...d, alive: false, high: s.high }));
+      draw(); return;
+    }
+    s.snake = [head, ...s.snake.slice(0, ate ? undefined : -1)];
+    if (ate) { s.score++; s.food = placeFood(s.snake); setDisplay(d => ({ ...d, score: s.score })); }
+    draw();
+    rafRef.current = requestAnimationFrame(tick);
+  }, [draw]);
+
+  const restart = React.useCallback(() => {
+    const s = stateRef.current;
+    s.snake = [{ x: 10, y: 8 }, { x: 9, y: 8 }, { x: 8, y: 8 }];
+    s.dir = { x: 1, y: 0 }; s.next = { x: 1, y: 0 };
+    s.food = placeFood(s.snake); s.alive = true; s.score = 0;
+    setDisplay(d => ({ ...d, score: 0, alive: true }));
+    lastRef.current = 0;
+    rafRef.current = requestAnimationFrame(tick);
+  }, [tick]);
+
+  useEffect(() => {
+    if (!started) return;
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [started, tick]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const s = stateRef.current;
+      const map: Record<string, Pt> = {
+        ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0},
+        w:{x:0,y:-1}, s:{x:0,y:1}, a:{x:-1,y:0}, d:{x:1,y:0}
+      };
+      const dir = map[e.key];
+      if (!dir) return;
+      e.preventDefault();
+      if (dir.x !== -s.dir.x || dir.y !== -s.dir.y) s.next = dir;
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => { draw(); }, [draw]);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex gap-8 mb-1">
+        {[["SCORE", display.score, "#00ff88"], ["BEST", display.high, "#ffff00"]].map(([l, v, c]) => (
+          <div key={String(l)} className="text-center">
+            <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "16px", color: String(c) }}>{v}</div>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "9px", color: "#555" }}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <canvas ref={canvasRef} width={GCOLS * CELL} height={GROWS * CELL}
+        style={{ border: "1px solid rgba(0,255,255,0.2)", display: "block" }} />
+      <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", color: "#333" }}>
+        {display.alive && started ? "↑ ↓ ← → o W A S D" : ""}
+      </p>
+      {!started ? (
+        <button onClick={() => setStarted(true)}
+          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "9px", color: "#00ffff", border: "2px solid #00ffff", padding: "10px 22px", background: "transparent", cursor: "pointer" }}>
+          ▶ JUGAR
+        </button>
+      ) : !display.alive ? (
+        <div className="flex flex-col items-center gap-3">
+          <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "10px", color: "#ff0000" }}>GAME OVER</p>
+          <button onClick={restart} style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "8px", color: "#00ffff", border: "1px solid #00ffff40", padding: "8px 16px", background: "transparent", cursor: "pointer" }}>
+            REINTENTAR
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ── Memory Card ───────────────────────────────────────────────────────────────
+
+const EMOJIS = ["🎮", "⚡", "🔥", "💎", "🌙", "🎵", "🚀", "👾"];
+
+function MemoryGame({ onClose }: { onClose: () => void }) {
+  const makeCards = () => {
+    const pairs = [...EMOJIS, ...EMOJIS].map((e, i) => ({ id: i, emoji: e, flipped: false, matched: false }));
+    for (let i = pairs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
+    return pairs;
+  };
+  const [cards, setCards] = useState(makeCards);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [best, setBest] = useState<number | null>(null);
+  const matched = cards.filter(c => c.matched).length;
+  const won = matched === cards.length;
+
+  const flip = (id: number) => {
+    if (locked || selected.length === 2) return;
+    const card = cards.find(c => c.id === id);
+    if (!card || card.flipped || card.matched) return;
+    const nextSel = [...selected, id];
+    setCards(cs => cs.map(c => c.id === id ? { ...c, flipped: true } : c));
+    setSelected(nextSel);
+    if (nextSel.length === 2) {
+      setMoves(m => m + 1);
+      setLocked(true);
+      const [a, b] = nextSel.map(sid => cards.find(c => c.id === sid)!);
+      if (a.emoji === b.emoji) {
+        setCards(cs => cs.map(c => nextSel.includes(c.id) ? { ...c, matched: true } : c));
+        setSelected([]); setLocked(false);
+      } else {
+        setTimeout(() => {
+          setCards(cs => cs.map(c => nextSel.includes(c.id) ? { ...c, flipped: false } : c));
+          setSelected([]); setLocked(false);
+        }, 850);
+      }
+    }
+  };
+
+  const restart = () => {
+    if (won) setBest(b => b === null || moves < b ? moves : b);
+    setCards(makeCards()); setSelected([]); setMoves(0); setLocked(false);
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex gap-8">
+        {[["MOVES", moves, "#00ffff"], ["PARES", matched / 2, "#00ff88"], ...(best !== null ? [["MEJOR", best, "#ffff00"]] : [])].map(([l, v, c]) => (
+          <div key={String(l)} className="text-center">
+            <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "16px", color: String(c) }}>{v}</div>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "9px", color: "#555" }}>{l}</div>
+          </div>
+        ))}
+      </div>
+      {won && <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "9px", color: "#00ff88", textShadow: "0 0 10px #00ff88" }}>¡GANASTE en {moves} moves!</p>}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 60px)", gap: "8px" }}>
+        {cards.map(card => (
+          <button key={card.id} onClick={() => flip(card.id)} style={{
+            width: 60, height: 60, fontSize: card.flipped || card.matched ? "28px" : "0",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: card.matched ? "rgba(0,255,136,0.1)" : card.flipped ? "rgba(0,255,255,0.08)" : "rgba(0,255,255,0.04)",
+            border: `1px solid ${card.matched ? "#00ff88" : card.flipped ? "#00ffff" : "rgba(0,255,255,0.2)"}`,
+            boxShadow: card.matched ? "0 0 10px #00ff8830" : card.flipped ? "0 0 8px #00ffff20" : "none",
+            cursor: card.matched || card.flipped ? "default" : "pointer", transition: "all 0.18s", borderRadius: 4,
+          }}>
+            {card.flipped || card.matched ? card.emoji : ""}
+          </button>
+        ))}
+      </div>
+      <button onClick={restart} style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "8px", color: won ? "#00ff88" : "#00ffff", border: `1px solid ${won ? "#00ff8840" : "#00ffff40"}`, padding: "8px 16px", background: "transparent", cursor: "pointer" }}>
+        {won ? "JUGAR DE NUEVO" : "REINICIAR"}
+      </button>
+    </div>
+  );
+}
+
 // ── Game Modal ────────────────────────────────────────────────────────────────
 
 function GameModal({ slug, name, onClose }: { slug: string; name: string; onClose: () => void }) {
@@ -386,6 +610,8 @@ function GameModal({ slug, name, onClose }: { slug: string; name: string; onClos
         </div>
         {slug === "tictactoe" && <TicTacToe onClose={onClose} />}
         {slug === "connect4" && <Connect4 onClose={onClose} />}
+        {slug === "snake" && <Snake onClose={onClose} />}
+        {slug === "memory" && <MemoryGame onClose={onClose} />}
       </div>
     </div>
   );
@@ -492,7 +718,7 @@ export default function Games() {
 
               {/* Admin panel link for privileged roles */}
               {(user.role === "owner" || user.role === "admin" || user.role === "moderator") && (
-                <Link href="/admin" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "7px", color: "#ff00ff", border: "1px solid #ff00ff40", padding: "6px 10px", textDecoration: "none" }}>
+                <Link href="/admin/dashboard" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "7px", color: "#ff00ff", border: "1px solid #ff00ff40", padding: "6px 10px", textDecoration: "none" }}>
                   ADMIN
                 </Link>
               )}
@@ -554,7 +780,7 @@ export default function Games() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {games.map((game) => {
               const color = TYPE_COLORS[game.type] ?? "#00ffff";
-              const playable = game.slug === "tictactoe" || game.slug === "connect4";
+              const playable = ["tictactoe", "connect4", "snake", "memory"].includes(game.slug);
               const isActive = game.active || playable;
 
               return (

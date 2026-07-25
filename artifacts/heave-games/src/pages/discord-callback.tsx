@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 export default function DiscordCallback() {
   const [, setLocation] = useLocation();
@@ -15,14 +15,12 @@ export default function DiscordCallback() {
 
     if (!token || error) {
       setStatus("error");
-      setTimeout(() => setLocation("/login?error=discord"), 2000);
+      setTimeout(() => setLocation("/login?error=discord"), 2200);
       return;
     }
 
-    // Save token
     localStorage.setItem("heave_token", token);
 
-    // Fetch user info to show welcome message + handle role-based redirect
     fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
       .then(user => {
@@ -34,9 +32,9 @@ export default function DiscordCallback() {
           setRole(user.role);
           setStatus("success");
 
-          // Redirect based on role
-          const isAdmin = user.role === "owner" || user.role === "admin" || user.role === "moderator";
-          setTimeout(() => setLocation(isAdmin ? "/admin" : "/games"), 1800);
+          const isPrivileged = user.role === "owner" || user.role === "admin" || user.role === "moderator";
+          // Redirect to /admin/dashboard (explicit sub-route, always resolves correctly)
+          setTimeout(() => setLocation(isPrivileged ? "/admin/dashboard" : "/games"), 1800);
         } else {
           setStatus("success");
           setTimeout(() => setLocation("/games"), 1500);
@@ -46,13 +44,18 @@ export default function DiscordCallback() {
         setStatus("success");
         setTimeout(() => setLocation("/games"), 1500);
       });
-  }, [setLocation]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const roleColor = role === "owner" ? "#ff00ff" : role === "admin" ? "#ffff00" : "#00ffff";
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center" style={{
-      backgroundImage: "linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px)",
-      backgroundSize: "40px 40px",
-    }}>
+    <div
+      className="min-h-screen bg-black flex items-center justify-center"
+      style={{
+        backgroundImage: "linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }}
+    >
       <div className="text-center px-8">
         {status === "loading" && (
           <>
@@ -65,35 +68,34 @@ export default function DiscordCallback() {
 
         {status === "success" && (
           <>
-            <CheckCircle className="w-12 h-12 mx-auto mb-6" style={{ color: "#00ff88" }} />
-            <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "12px", color: "#00ff88", textShadow: "0 0 12px #00ff88", marginBottom: "16px" }}>
-              ¡SESIÓN INICIADA!
+            <CheckCircle className="w-12 h-12 mx-auto mb-5" style={{ color: "#00ff88" }} />
+            <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "13px", color: "#00ff88", textShadow: "0 0 14px #00ff88", marginBottom: "18px" }}>
+              ¡BIENVENIDO!
             </p>
             {username && (
-              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "13px", color: "#00ffff", marginBottom: "8px" }}>
-                Bienvenido, <strong>{username}</strong>
+              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "14px", color: "#fff", marginBottom: "8px" }}>
+                Sesión iniciada como <span style={{ color: "#00ffff" }}><strong>{username}</strong></span>
               </p>
             )}
             {role && (
-              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "11px", color: "#555" }}>
-                Rol: <span style={{ color: role === "owner" ? "#ff00ff" : role === "admin" ? "#ffff00" : "#00ffff" }}>
-                  {role.toUpperCase()}
-                </span>
+              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "12px", color: "#555", marginBottom: "20px" }}>
+                Rol: <span style={{ color: roleColor, fontWeight: "bold" }}>{role.toUpperCase()}</span>
               </p>
             )}
-            <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", color: "#444", marginTop: "20px" }}>
-              {(role === "owner" || role === "admin") ? "Redirigiendo al panel admin..." : "Redirigiendo a los juegos..."}
+            <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", color: "#333" }}>
+              {(role === "owner" || role === "admin") ? "→ Abriendo panel de administración..." : "→ Cargando juegos..."}
             </p>
           </>
         )}
 
         {status === "error" && (
           <>
+            <XCircle className="w-12 h-12 mx-auto mb-5" style={{ color: "#ff0000" }} />
             <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "10px", color: "#ff0000", marginBottom: "12px" }}>
               ERROR DE AUTENTICACIÓN
             </p>
             <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "11px", color: "#555" }}>
-              Redirigiendo al login...
+              No se pudo conectar con Discord. Redirigiendo...
             </p>
           </>
         )}

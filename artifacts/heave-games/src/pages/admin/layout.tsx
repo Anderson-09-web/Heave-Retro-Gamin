@@ -20,37 +20,39 @@ import {
   FolderTree,
 } from "lucide-react";
 
+// Paths are relative to the /admin nest base.
+// useLocation() inside a wouter nest returns paths relative to that base.
 const NAV_GROUPS = [
   {
     title: "OVERVIEW",
     color: "#00ffff",
     items: [
-      { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Docs", href: "/admin/docs", icon: BookOpen },
+      { name: "Dashboard", href: "/", icon: LayoutDashboard },
+      { name: "Docs", href: "/docs", icon: BookOpen },
     ],
   },
   {
     title: "MANAGEMENT",
     color: "#ff00ff",
     items: [
-      { name: "Users", href: "/admin/users", icon: Users },
-      { name: "API Keys", href: "/admin/api-keys", icon: Key },
-      { name: "Endpoints", href: "/admin/endpoints", icon: Database },
-      { name: "Categories", href: "/admin/categories", icon: FolderTree },
-      { name: "Images & GIFs", href: "/admin/images", icon: ImageIcon },
-      { name: "Giveaways", href: "/admin/giveaways", icon: Gift },
-      { name: "Games", href: "/admin/games", icon: Gamepad2 },
+      { name: "Users", href: "/users", icon: Users },
+      { name: "API Keys", href: "/api-keys", icon: Key },
+      { name: "Endpoints", href: "/endpoints", icon: Database },
+      { name: "Categories", href: "/categories", icon: FolderTree },
+      { name: "Images & GIFs", href: "/images", icon: ImageIcon },
+      { name: "Giveaways", href: "/giveaways", icon: Gift },
+      { name: "Games", href: "/games", icon: Gamepad2 },
     ],
   },
   {
     title: "SYSTEM",
     color: "#ffff00",
     items: [
-      { name: "Services", href: "/admin/services", icon: Server },
-      { name: "Logs", href: "/admin/logs", icon: Activity },
-      { name: "Errors", href: "/admin/logs/errors", icon: AlertTriangle },
-      { name: "Backups", href: "/admin/backups", icon: Archive },
-      { name: "Config", href: "/admin/config", icon: Settings },
+      { name: "Services", href: "/services", icon: Server },
+      { name: "Logs", href: "/logs", icon: Activity },
+      { name: "Errors", href: "/logs/errors", icon: AlertTriangle },
+      { name: "Backups", href: "/backups", icon: Archive },
+      { name: "Config", href: "/config", icon: Settings },
     ],
   },
 ];

@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useGetPublicStats, useGetPublicCategories } from "@workspace/api-client-react";
-import { Gamepad2, Layers, Zap, Code, Shield, Menu, X } from "lucide-react";
+import { Gamepad2, Layers, Zap, Code, Shield, Menu, X, LogOut } from "lucide-react";
+
+type SessionUser = { username: string; role: string; avatarUrl?: string | null };
 
 const NAV_LINKS = [
   { label: "> HOME", href: "#home" },
   { label: "> GAMES", href: "/games" },
   { label: "> FEATURES", href: "#features" },
   { label: "> API", href: "#api" },
-  { label: "> ADMIN", href: "/admin/login" },
 ];
 
 function Logo() {
@@ -46,17 +47,18 @@ function Logo() {
   );
 }
 
-function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
+function Sidebar({ open, onClose, user, onLogout }: { open?: boolean; onClose?: () => void; user: SessionUser | null; onLogout: () => void }) {
+  const discordName = user?.username?.startsWith("discord_")
+    ? `Discord #${user.username.replace("discord_", "").slice(-4)}`
+    : user?.username;
+
   return (
     <aside
       className="flex flex-col bg-black border-r h-full"
       style={{ borderColor: "rgba(0,255,255,0.25)" }}
     >
       {/* Logo */}
-      <div
-        className="p-6 border-b"
-        style={{ borderColor: "rgba(0,255,255,0.25)" }}
-      >
+      <div className="p-6 border-b" style={{ borderColor: "rgba(0,255,255,0.25)" }}>
         <div className="flex items-center justify-between">
           <Logo />
           {onClose && (
@@ -67,65 +69,80 @@ function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
         </div>
       </div>
 
+      {/* Session badge */}
+      {user && (
+        <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(0,255,255,0.1)", background: "rgba(0,255,255,0.03)" }}>
+          <div className="flex items-center gap-2 mb-1">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="avatar" className="w-6 h-6 rounded-full" style={{ border: "1px solid rgba(0,255,255,0.4)" }} />
+            ) : (
+              <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#5865f2", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Press Start 2P', monospace", fontSize: "7px", color: "#fff" }}>
+                {(discordName ?? "U")[0].toUpperCase()}
+              </div>
+            )}
+            <div>
+              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "9px", color: "#00ffff" }}>{discordName}</p>
+              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "8px", color: "#555" }}>{user.role.toUpperCase()}</p>
+            </div>
+          </div>
+          <button onClick={onLogout} style={{ fontFamily: "'Space Mono', monospace", fontSize: "8px", color: "#444", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", padding: 0 }}>
+            <LogOut style={{ width: 10, height: 10 }} /> Cerrar sesión
+          </button>
+        </div>
+      )}
+
       {/* Nav */}
-      <nav className="flex-1 py-8 px-4 space-y-1">
+      <nav className="flex-1 py-6 px-4 space-y-1">
         {NAV_LINKS.map((link) =>
           link.href.startsWith("/") ? (
-            <Link
-              key={link.label}
-              href={link.href}
+            <Link key={link.label} href={link.href}
               className="block px-4 py-3 text-xs transition-all duration-100 hover:bg-cyan-400/10"
-              style={{
-                fontFamily: "'Press Start 2P', monospace",
-                color: "#00ffff",
-                fontSize: "9px",
-                letterSpacing: "0.05em",
-              }}
-              onClick={onClose}
-            >
+              style={{ fontFamily: "'Press Start 2P', monospace", color: "#00ffff", fontSize: "9px", letterSpacing: "0.05em" }}
+              onClick={onClose}>
               {link.label}
             </Link>
           ) : (
-            <a
-              key={link.label}
-              href={link.href}
+            <a key={link.label} href={link.href}
               className="block px-4 py-3 text-xs transition-all duration-100 hover:bg-cyan-400/10"
-              style={{
-                fontFamily: "'Press Start 2P', monospace",
-                color: "#00ffff",
-                fontSize: "9px",
-                letterSpacing: "0.05em",
-              }}
-              onClick={onClose}
-            >
+              style={{ fontFamily: "'Press Start 2P', monospace", color: "#00ffff", fontSize: "9px", letterSpacing: "0.05em" }}
+              onClick={onClose}>
               {link.label}
             </a>
           )
         )}
 
-        {/* Discord Login */}
-        <div className="pt-6">
-          <Link
-            href="/login"
-            className="block px-4 py-3 text-xs text-center border-2 transition-all duration-100"
-            style={{
-              fontFamily: "'Press Start 2P', monospace",
-              borderColor: "#ff00ff",
-              color: "#ff00ff",
-              fontSize: "9px",
-            }}
-            onClick={onClose}
-          >
-            PLAY NOW
+        {/* Admin link for privileged users */}
+        {user && (user.role === "owner" || user.role === "admin" || user.role === "moderator") && (
+          <Link href="/admin/dashboard"
+            className="block px-4 py-3 text-xs transition-all duration-100 hover:bg-fuchsia-400/10"
+            style={{ fontFamily: "'Press Start 2P', monospace", color: "#ff00ff", fontSize: "9px", letterSpacing: "0.05em" }}
+            onClick={onClose}>
+            {">"} ADMIN
           </Link>
+        )}
+
+        {/* CTA */}
+        <div className="pt-6">
+          {user ? (
+            <Link href="/games"
+              className="block px-4 py-3 text-xs text-center border-2 transition-all duration-100"
+              style={{ fontFamily: "'Press Start 2P', monospace", borderColor: "#00ffff", color: "#00ffff", fontSize: "9px" }}
+              onClick={onClose}>
+              ▶ JUGAR
+            </Link>
+          ) : (
+            <a href="/api/auth/discord"
+              className="block px-4 py-3 text-xs text-center border-2 transition-all duration-100"
+              style={{ fontFamily: "'Press Start 2P', monospace", borderColor: "#5865f2", color: "#5865f2", fontSize: "9px", textDecoration: "none" }}
+              onClick={onClose}>
+              PLAY WITH DISCORD
+            </a>
+          )}
         </div>
       </nav>
 
       {/* Footer */}
-      <div
-        className="p-4 border-t text-center"
-        style={{ borderColor: "rgba(0,255,255,0.15)" }}
-      >
+      <div className="p-4 border-t text-center" style={{ borderColor: "rgba(0,255,255,0.15)" }}>
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: "10px", color: "#555" }}>
           © 2025 HEAVE RETRO
         </p>
@@ -138,6 +155,23 @@ export default function Landing() {
   const { data: stats } = useGetPublicStats();
   const { data: categories } = useGetPublicCategories();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("heave_token");
+    if (!token) return;
+    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.id) setUser(data); })
+      .catch(() => {});
+  }, []);
+
+  const handleLogout = () => {
+    const token = localStorage.getItem("heave_token");
+    if (token) fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+    localStorage.removeItem("heave_token");
+    setUser(null);
+  };
 
   return (
     <div className="min-h-screen flex bg-black text-white">
@@ -145,7 +179,7 @@ export default function Landing() {
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="w-64 h-full">
-            <Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
+            <Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} user={user} onLogout={handleLogout} />
           </div>
           <div
             className="flex-1 bg-black/70"
@@ -156,7 +190,7 @@ export default function Landing() {
 
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:w-56 md:flex-shrink-0 md:fixed md:inset-y-0 md:left-0 md:z-40">
-        <Sidebar />
+        <Sidebar user={user} onLogout={handleLogout} />
       </div>
 
       {/* Main content */}
