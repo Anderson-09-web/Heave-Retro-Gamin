@@ -847,13 +847,37 @@ export const ListGamesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "slug": zod.string(),
-  "type": zod.enum(['online', 'offline', 'interaction']),
+  "type": zod.enum(['online', 'offline', 'interaction', 'turn_based', 'card', 'action', 'puzzle']),
   "description": zod.string(),
   "active": zod.boolean(),
   "playCount": zod.number(),
   "iconUrl": zod.string().nullish()
 })
 export const ListGamesResponse = zod.array(ListGamesResponseItem)
+
+
+/**
+ * @summary Create a new game
+ */
+export const CreateGameBody = zod.object({
+  "name": zod.string(),
+  "slug": zod.string(),
+  "type": zod.enum(['online', 'offline', 'interaction', 'turn_based', 'card', 'action', 'puzzle']),
+  "description": zod.string(),
+  "active": zod.boolean().optional(),
+  "iconUrl": zod.string().nullish()
+})
+
+export const CreateGameResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "type": zod.enum(['online', 'offline', 'interaction', 'turn_based', 'card', 'action', 'puzzle']),
+  "description": zod.string(),
+  "active": zod.boolean(),
+  "playCount": zod.number(),
+  "iconUrl": zod.string().nullish()
+})
 
 
 /**
@@ -866,6 +890,42 @@ export const GetGamesStatsResponseItem = zod.object({
   "uniquePlayers": zod.number()
 })
 export const GetGamesStatsResponse = zod.array(GetGamesStatsResponseItem)
+
+
+/**
+ * @summary Update a game
+ */
+export const UpdateGameParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateGameBody = zod.object({
+  "name": zod.string().optional(),
+  "description": zod.string().optional(),
+  "active": zod.boolean().optional(),
+  "iconUrl": zod.string().nullish()
+})
+
+export const UpdateGameResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "type": zod.enum(['online', 'offline', 'interaction', 'turn_based', 'card', 'action', 'puzzle']),
+  "description": zod.string(),
+  "active": zod.boolean(),
+  "playCount": zod.number(),
+  "iconUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary Delete a game
+ */
+export const DeleteGameParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteGameResponse = zod.void()
 
 
 /**

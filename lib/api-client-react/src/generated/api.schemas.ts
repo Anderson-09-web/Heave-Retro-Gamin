@@ -431,6 +431,10 @@ export const GameType = {
   online: 'online',
   offline: 'offline',
   interaction: 'interaction',
+  turn_based: 'turn_based',
+  card: 'card',
+  action: 'action',
+  puzzle: 'puzzle',
 } as const;
 
 export interface Game {
@@ -441,6 +445,37 @@ export interface Game {
   description: string;
   active: boolean;
   playCount: number;
+  /** @nullable */
+  iconUrl?: string | null;
+}
+
+export type GameInputType = typeof GameInputType[keyof typeof GameInputType];
+
+
+export const GameInputType = {
+  online: 'online',
+  offline: 'offline',
+  interaction: 'interaction',
+  turn_based: 'turn_based',
+  card: 'card',
+  action: 'action',
+  puzzle: 'puzzle',
+} as const;
+
+export interface GameInput {
+  name: string;
+  slug: string;
+  type: GameInputType;
+  description: string;
+  active?: boolean;
+  /** @nullable */
+  iconUrl?: string | null;
+}
+
+export interface GameUpdate {
+  name?: string;
+  description?: string;
+  active?: boolean;
   /** @nullable */
   iconUrl?: string | null;
 }

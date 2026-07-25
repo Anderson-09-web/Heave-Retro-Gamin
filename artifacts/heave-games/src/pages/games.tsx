@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { Link, useLocation } from "wouter";
 import { Gamepad2, Loader2, X, LogOut, ChevronRight } from "lucide-react";
 
@@ -74,18 +75,17 @@ function TicTacToe({ onClose }: { onClose: () => void }) {
   const cpuThinking = vsMode === "cpu" && !isX && !winner;
 
   useEffect(() => {
-    if (cpuThinking) {
-      const t = setTimeout(() => {
-        const idx = tttCpuMove(board);
-        const next = [...board];
-        next[idx] = "O";
-        setBoard(next);
-        const w = checkTTTWinner(next);
-        if (w) setScores(s => ({ ...s, [w === "draw" ? "draw" : w]: s[w === "draw" ? "draw" : w] + 1 }));
-        setIsX(true);
-      }, 400);
-      return () => clearTimeout(t);
-    }
+    if (!cpuThinking) return undefined;
+    const t = setTimeout(() => {
+      const idx = tttCpuMove(board);
+      const next = [...board];
+      next[idx] = "O";
+      setBoard(next);
+      const w = checkTTTWinner(next);
+      if (w) setScores(s => ({ ...s, [w === "draw" ? "draw" : w]: s[w === "draw" ? "draw" : w] + 1 }));
+      setIsX(true);
+    }, 400);
+    return () => clearTimeout(t);
   }, [cpuThinking, board]);
 
   const handleClick = (i: number) => {
@@ -251,21 +251,20 @@ function Connect4({ onClose }: { onClose: () => void }) {
   const cpuThinking = vsMode === "cpu" && turn === 2 && !winner;
 
   useEffect(() => {
-    if (cpuThinking) {
-      const t = setTimeout(() => {
-        const col = c4CpuMove(board);
-        const next = dropC4(board, col, 2);
-        if (next) {
-          setBoard(next);
-          const w = checkC4Winner(next);
-          if (w === 1) setScores(s => ({ ...s, p1: s.p1 + 1 }));
-          else if (w === 2) setScores(s => ({ ...s, p2: s.p2 + 1 }));
-          else if (w === "draw") setScores(s => ({ ...s, draw: s.draw + 1 }));
-          setTurn(1);
-        }
-      }, 500);
-      return () => clearTimeout(t);
-    }
+    if (!cpuThinking) return undefined;
+    const t = setTimeout(() => {
+      const col = c4CpuMove(board);
+      const next = dropC4(board, col, 2);
+      if (next) {
+        setBoard(next);
+        const w = checkC4Winner(next);
+        if (w === 1) setScores(s => ({ ...s, p1: s.p1 + 1 }));
+        else if (w === 2) setScores(s => ({ ...s, p2: s.p2 + 1 }));
+        else if (w === "draw") setScores(s => ({ ...s, draw: s.draw + 1 }));
+        setTurn(1);
+      }
+    }, 500);
+    return () => clearTimeout(t);
   }, [cpuThinking, board]);
 
   const handleCol = (col: number) => {
@@ -593,8 +592,19 @@ function MemoryGame({ onClose }: { onClose: () => void }) {
 // ── Game Modal ────────────────────────────────────────────────────────────────
 
 function GameModal({ slug, name, onClose }: { slug: string; name: string; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.92)" }} onClick={onClose}>
+  // Close on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const modal = (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.92)" }}
+      onClick={onClose}
+    >
       <div
         className="relative max-h-[90vh] overflow-y-auto"
         style={{ background: "#000", border: "2px solid rgba(0,255,255,0.35)", boxShadow: "0 0 40px rgba(0,255,255,0.15)", padding: "24px", minWidth: "340px" }}
@@ -615,6 +625,10 @@ function GameModal({ slug, name, onClose }: { slug: string; name: string; onClos
       </div>
     </div>
   );
+
+  // Render into document.body via portal to avoid removeChild conflicts
+  // caused by React reconciling the modal alongside route transitions.
+  return ReactDOM.createPortal(modal, document.body);
 }
 
 // ── Main Games Page ───────────────────────────────────────────────────────────

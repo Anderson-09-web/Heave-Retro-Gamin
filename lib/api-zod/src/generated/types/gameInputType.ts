@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GameType = typeof GameType[keyof typeof GameType];
+export type GameInputType = typeof GameInputType[keyof typeof GameInputType];
 
 
-export const GameType = {
+export const GameInputType = {
   online: 'online',
   offline: 'offline',
   interaction: 'interaction',

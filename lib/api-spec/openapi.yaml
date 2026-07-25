@@ -850,6 +850,23 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Game"
+    post:
+      operationId: createGame
+      tags: [games]
+      summary: Create a new game
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameInput"
+      responses:
+        "201":
+          description: Created game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
 
   /games/stats:
     get:
@@ -865,6 +882,44 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GameStat"
+
+  /games/{id}:
+    patch:
+      operationId: updateGame
+      tags: [games]
+      summary: Update a game
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameUpdate"
+      responses:
+        "200":
+          description: Updated game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+    delete:
+      operationId: deleteGame
+      tags: [games]
+      summary: Delete a game
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   # PUBLIC LANDING
   /public/stats:
@@ -1426,13 +1481,43 @@ components:
           type: string
         type:
           type: string
-          enum: [online, offline, interaction]
+          enum: [online, offline, interaction, turn_based, card, action, puzzle]
         description:
           type: string
         active:
           type: boolean
         playCount:
           type: integer
+        iconUrl:
+          type: ["string", "null"]
+
+    GameInput:
+      type: object
+      required: [name, slug, type, description]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+          enum: [online, offline, interaction, turn_based, card, action, puzzle]
+        description:
+          type: string
+        active:
+          type: boolean
+        iconUrl:
+          type: ["string", "null"]
+
+    GameUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
         iconUrl:
           type: ["string", "null"]
 
