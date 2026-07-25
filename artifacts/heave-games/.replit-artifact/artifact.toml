@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Heave Games API"
+version = "1.0.0"
+id = "artifacts/heave-games"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21901
+
+[services.development]
+run = "pnpm --filter @workspace/heave-games run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/heave-games", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/heave-games/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21901"
+BASE_PATH = "/"

@@ -3,20 +3,33 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Heave Games API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: dashboard
+  - name: users
+  - name: api-keys
+  - name: endpoints
+  - name: categories
+  - name: images
+  - name: logs
+  - name: services
+  - name: backups
+  - name: config
+  - name: giveaways
+  - name: games
+  - name: docs
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +37,1467 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/login:
+    post:
+      operationId: authLogin
+      tags: [auth]
+      summary: Login with username/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Unauthorized
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/register:
+    post:
+      operationId: authRegister
+      tags: [auth]
+      summary: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "409":
+          description: Username or email already taken
+
+  /auth/discord:
+    get:
+      operationId: discordOAuthRedirect
+      tags: [auth]
+      summary: Redirect to Discord OAuth2
+      responses:
+        "302":
+          description: Redirect to Discord
+
+  /auth/discord/callback:
+    get:
+      operationId: discordOAuthCallback
+      tags: [auth]
+      summary: Discord OAuth2 callback
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Discord auth result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+
+  /auth/logout:
+    post:
+      operationId: authLogout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  # DASHBOARD
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/top-endpoints:
+    get:
+      operationId: getTopEndpoints
+      tags: [dashboard]
+      summary: Get top used endpoints
+      responses:
+        "200":
+          description: Top endpoints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EndpointStat"
+
+  # USERS
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /users/{id}/role:
+    patch:
+      operationId: updateUserRole
+      tags: [users]
+      summary: Update user role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # API KEYS
+  /api-keys:
+    get:
+      operationId: listApiKeys
+      tags: [api-keys]
+      summary: List all API keys
+      responses:
+        "200":
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiKey"
+    post:
+      operationId: createApiKey
+      tags: [api-keys]
+      summary: Create API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyInput"
+      responses:
+        "201":
+          description: Created API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKey"
+
+  /api-keys/{id}:
+    patch:
+      operationId: updateApiKey
+      tags: [api-keys]
+      summary: Update API key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyUpdate"
+      responses:
+        "200":
+          description: Updated API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKey"
+    delete:
+      operationId: deleteApiKey
+      tags: [api-keys]
+      summary: Delete API key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /api-keys/{id}/revoke:
+    post:
+      operationId: revokeApiKey
+      tags: [api-keys]
+      summary: Revoke API key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKey"
+
+  # CATEGORIES
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ENDPOINTS (API endpoint management)
+  /endpoints:
+    get:
+      operationId: listApiEndpoints
+      tags: [endpoints]
+      summary: List all API endpoints
+      responses:
+        "200":
+          description: Endpoints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiEndpoint"
+    post:
+      operationId: createApiEndpoint
+      tags: [endpoints]
+      summary: Create a new endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiEndpointInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiEndpoint"
+
+  /endpoints/{id}:
+    patch:
+      operationId: updateApiEndpoint
+      tags: [endpoints]
+      summary: Update endpoint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiEndpointUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiEndpoint"
+    delete:
+      operationId: deleteApiEndpoint
+      tags: [endpoints]
+      summary: Delete endpoint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /endpoints/{id}/toggle:
+    post:
+      operationId: toggleApiEndpoint
+      tags: [endpoints]
+      summary: Toggle endpoint active/inactive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiEndpoint"
+
+  # IMAGES
+  /images:
+    get:
+      operationId: listImages
+      tags: [images]
+      summary: List images and GIFs
+      responses:
+        "200":
+          description: Images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Image"
+    post:
+      operationId: uploadImage
+      tags: [images]
+      summary: Upload image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+
+  /images/{id}:
+    delete:
+      operationId: deleteImage
+      tags: [images]
+      summary: Delete image
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # LOGS
+  /logs:
+    get:
+      operationId: listLogs
+      tags: [logs]
+      summary: Get recent logs
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+
+  /logs/errors:
+    get:
+      operationId: listErrorLogs
+      tags: [logs]
+      summary: Get error history
+      responses:
+        "200":
+          description: Error logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+
+  # SERVICES STATUS
+  /services/status:
+    get:
+      operationId: getServicesStatus
+      tags: [services]
+      summary: Get status of all services
+      responses:
+        "200":
+          description: Services status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServicesStatus"
+
+  /services/performance:
+    get:
+      operationId: getPerformanceMetrics
+      tags: [services]
+      summary: Get performance metrics
+      responses:
+        "200":
+          description: Metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerformanceMetrics"
+
+  # BACKUPS
+  /backups:
+    get:
+      operationId: listBackups
+      tags: [backups]
+      summary: List all backups
+      responses:
+        "200":
+          description: Backups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Backup"
+    post:
+      operationId: createBackup
+      tags: [backups]
+      summary: Create a backup
+      responses:
+        "201":
+          description: Backup created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backup"
+
+  /backups/{id}/restore:
+    post:
+      operationId: restoreBackup
+      tags: [backups]
+      summary: Restore a backup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backup"
+
+  # CONFIG
+  /config:
+    get:
+      operationId: getConfig
+      tags: [config]
+      summary: Get global config
+      responses:
+        "200":
+          description: Config
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConfigEntry"
+    post:
+      operationId: upsertConfig
+      tags: [config]
+      summary: Create or update a config entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigInput"
+      responses:
+        "200":
+          description: Updated config entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigEntry"
+
+  /config/{key}:
+    delete:
+      operationId: deleteConfig
+      tags: [config]
+      summary: Delete config entry
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # GIVEAWAYS / SORTEOS
+  /giveaways:
+    get:
+      operationId: listGiveaways
+      tags: [giveaways]
+      summary: List giveaways
+      responses:
+        "200":
+          description: Giveaways
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Giveaway"
+    post:
+      operationId: createGiveaway
+      tags: [giveaways]
+      summary: Create giveaway
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GiveawayInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Giveaway"
+
+  /giveaways/{id}:
+    get:
+      operationId: getGiveaway
+      tags: [giveaways]
+      summary: Get a giveaway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Giveaway
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Giveaway"
+    delete:
+      operationId: deleteGiveaway
+      tags: [giveaways]
+      summary: Delete giveaway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /giveaways/{id}/end:
+    post:
+      operationId: endGiveaway
+      tags: [giveaways]
+      summary: End giveaway and pick winner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Giveaway ended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Giveaway"
+
+  # GAMES
+  /games:
+    get:
+      operationId: listGames
+      tags: [games]
+      summary: List all games
+      responses:
+        "200":
+          description: Games
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Game"
+
+  /games/stats:
+    get:
+      operationId: getGamesStats
+      tags: [games]
+      summary: Get games statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameStat"
+
+  # PUBLIC LANDING
+  /public/stats:
+    get:
+      operationId: getPublicStats
+      tags: [docs]
+      summary: Public API statistics for landing page
+      responses:
+        "200":
+          description: Public stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicStats"
+
+  /public/categories:
+    get:
+      operationId: getPublicCategories
+      tags: [docs]
+      summary: Public categories with item counts
+      responses:
+        "200":
+          description: Categories with counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicCategory"
+
+  /public/changelog:
+    get:
+      operationId: getChangelog
+      tags: [docs]
+      summary: Get changelog/news entries
+      responses:
+        "200":
+          description: Changelog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChangelogEntry"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # AUTH
+    LoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RegisterInput:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+
+    AuthResult:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # USER
+    User:
+      type: object
+      required: [id, username, email, role, active, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [owner, admin, moderator, user]
+        active:
+          type: boolean
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    UserInput:
+      type: object
+      required: [username, email, password, role]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [owner, admin, moderator, user]
+
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        active:
+          type: boolean
+        avatarUrl:
+          type: ["string", "null"]
+
+    UserRoleUpdate:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [owner, admin, moderator, user]
+
+    # DASHBOARD
+    DashboardStats:
+      type: object
+      required: [totalRequests, totalUsers, activeApiKeys, totalEndpoints, requestsToday, uptime, cpuUsage, memoryUsage]
+      properties:
+        totalRequests:
+          type: integer
+        totalUsers:
+          type: integer
+        activeApiKeys:
+          type: integer
+        totalEndpoints:
+          type: integer
+        requestsToday:
+          type: integer
+        uptime:
+          type: number
+        cpuUsage:
+          type: number
+        memoryUsage:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, message, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+        userId:
+          type: ["integer", "null"]
+
+    EndpointStat:
+      type: object
+      required: [path, method, requestCount, avgResponseMs]
+      properties:
+        path:
+          type: string
+        method:
+          type: string
+        requestCount:
+          type: integer
+        avgResponseMs:
+          type: number
+        categoryId:
+          type: ["integer", "null"]
+
+    # API KEY
+    ApiKey:
+      type: object
+      required: [id, name, keyPreview, active, createdAt, requestCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        keyPreview:
+          type: string
+        active:
+          type: boolean
+        requestCount:
+          type: integer
+        rateLimit:
+          type: ["integer", "null"]
+        expiresAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        userId:
+          type: ["integer", "null"]
+
+    ApiKeyInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        rateLimit:
+          type: ["integer", "null"]
+        expiresAt:
+          type: ["string", "null"]
+        userId:
+          type: ["integer", "null"]
+
+    ApiKeyUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        active:
+          type: boolean
+        rateLimit:
+          type: ["integer", "null"]
+
+    # CATEGORY
+    Category:
+      type: object
+      required: [id, name, slug, description, icon, active, itemCount, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        active:
+          type: boolean
+        itemCount:
+          type: integer
+        createdAt:
+          type: string
+
+    CategoryInput:
+      type: object
+      required: [name, slug, description, icon]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+
+    CategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        active:
+          type: boolean
+
+    # API ENDPOINT
+    ApiEndpoint:
+      type: object
+      required: [id, path, method, description, active, categoryId, requestCount, responseJson, createdAt]
+      properties:
+        id:
+          type: integer
+        path:
+          type: string
+        method:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+        categoryId:
+          type: integer
+        requestCount:
+          type: integer
+        responseJson:
+          type: string
+        requiresAuth:
+          type: boolean
+        rateLimit:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    ApiEndpointInput:
+      type: object
+      required: [path, method, description, categoryId, responseJson]
+      properties:
+        path:
+          type: string
+        method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+        description:
+          type: string
+        categoryId:
+          type: integer
+        responseJson:
+          type: string
+        requiresAuth:
+          type: boolean
+        rateLimit:
+          type: ["integer", "null"]
+
+    ApiEndpointUpdate:
+      type: object
+      properties:
+        description:
+          type: string
+        active:
+          type: boolean
+        responseJson:
+          type: string
+        requiresAuth:
+          type: boolean
+        rateLimit:
+          type: ["integer", "null"]
+
+    # IMAGE
+    Image:
+      type: object
+      required: [id, url, type, categoryId, tags, createdAt]
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        type:
+          type: string
+          enum: [image, gif]
+        categoryId:
+          type: integer
+        tags:
+          type: string
+        requestCount:
+          type: integer
+        createdAt:
+          type: string
+
+    ImageInput:
+      type: object
+      required: [url, type, categoryId]
+      properties:
+        url:
+          type: string
+        type:
+          type: string
+          enum: [image, gif]
+        categoryId:
+          type: integer
+        tags:
+          type: string
+
+    # LOG
+    LogEntry:
+      type: object
+      required: [id, level, message, createdAt]
+      properties:
+        id:
+          type: integer
+        level:
+          type: string
+          enum: [info, warn, error, debug]
+        message:
+          type: string
+        source:
+          type: ["string", "null"]
+        meta:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    # SERVICES
+    ServicesStatus:
+      type: object
+      required: [api, database, cache, uptime, latencyMs, cpuPercent, memoryPercent]
+      properties:
+        api:
+          type: string
+          enum: [online, offline, degraded]
+        database:
+          type: string
+          enum: [online, offline, degraded]
+        cache:
+          type: string
+          enum: [online, offline, degraded]
+        redis:
+          type: string
+          enum: [online, offline, degraded, unavailable]
+        uptime:
+          type: number
+        latencyMs:
+          type: number
+        cpuPercent:
+          type: number
+        memoryPercent:
+          type: number
+
+    PerformanceMetrics:
+      type: object
+      required: [requestsPerMinute, avgResponseMs, errorRate, p95ResponseMs]
+      properties:
+        requestsPerMinute:
+          type: number
+        avgResponseMs:
+          type: number
+        errorRate:
+          type: number
+        p95ResponseMs:
+          type: number
+        requestsHistory:
+          type: array
+          items:
+            type: object
+            required: [time, count]
+            properties:
+              time:
+                type: string
+              count:
+                type: integer
+
+    # BACKUP
+    Backup:
+      type: object
+      required: [id, name, size, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        size:
+          type: string
+        status:
+          type: string
+          enum: [completed, in_progress, failed]
+        createdAt:
+          type: string
+        restoredAt:
+          type: ["string", "null"]
+
+    # CONFIG
+    ConfigEntry:
+      type: object
+      required: [id, key, value, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        key:
+          type: string
+        value:
+          type: string
+        type:
+          type: string
+          enum: [string, number, boolean, json]
+        description:
+          type: string
+        isSecret:
+          type: boolean
+        createdAt:
+          type: string
+
+    ConfigInput:
+      type: object
+      required: [key, value, type]
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        type:
+          type: string
+          enum: [string, number, boolean, json]
+        description:
+          type: string
+        isSecret:
+          type: boolean
+
+    # GIVEAWAY
+    Giveaway:
+      type: object
+      required: [id, title, prize, status, participantCount, endsAt, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        prize:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, ended, cancelled]
+        participantCount:
+          type: integer
+        winnerUserId:
+          type: ["integer", "null"]
+        winnerName:
+          type: ["string", "null"]
+        endsAt:
+          type: string
+        createdAt:
+          type: string
+
+    GiveawayInput:
+      type: object
+      required: [title, prize, endsAt]
+      properties:
+        title:
+          type: string
+        prize:
+          type: string
+        description:
+          type: ["string", "null"]
+        endsAt:
+          type: string
+
+    # GAME
+    Game:
+      type: object
+      required: [id, name, slug, type, description, active, playCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+          enum: [online, offline, interaction]
+        description:
+          type: string
+        active:
+          type: boolean
+        playCount:
+          type: integer
+        iconUrl:
+          type: ["string", "null"]
+
+    GameStat:
+      type: object
+      required: [gameId, gameName, playCount, uniquePlayers]
+      properties:
+        gameId:
+          type: integer
+        gameName:
+          type: string
+        playCount:
+          type: integer
+        uniquePlayers:
+          type: integer
+
+    # PUBLIC
+    PublicStats:
+      type: object
+      required: [totalEndpoints, totalUsers, activeKeys, totalGames, requestsToday, uptime]
+      properties:
+        totalEndpoints:
+          type: integer
+        totalUsers:
+          type: integer
+        activeKeys:
+          type: integer
+        totalGames:
+          type: integer
+        requestsToday:
+          type: integer
+        uptime:
+          type: number
+
+    PublicCategory:
+      type: object
+      required: [id, name, slug, description, icon, itemCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        itemCount:
+          type: integer
+
+    ChangelogEntry:
+      type: object
+      required: [id, version, title, description, type, createdAt]
+      properties:
+        id:
+          type: integer
+        version:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [feature, fix, breaking, security, improvement]
+        createdAt:
+          type: string
