@@ -6,6 +6,9 @@ import NotFound from '@/pages/not-found';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 
 import Landing from './pages/landing';
+import UserLogin from './pages/login';
+import Games from './pages/games';
+import DiscordCallback from './pages/discord-callback';
 import AdminLayout from './pages/admin/layout';
 import Login from './pages/admin/login';
 import Dashboard from './pages/admin/dashboard';
@@ -20,7 +23,7 @@ import Services from './pages/admin/services';
 import Backups from './pages/admin/backups';
 import Config from './pages/admin/config';
 import Giveaways from './pages/admin/giveaways';
-import Games from './pages/admin/games';
+import AdminGames from './pages/admin/games';
 import Docs from './pages/admin/docs';
 
 const queryClient = new QueryClient({
@@ -35,7 +38,13 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
+      {/* Public routes */}
       <Route path="/" component={Landing} />
+      <Route path="/login" component={UserLogin} />
+      <Route path="/games" component={Games} />
+      <Route path="/auth/discord/callback" component={DiscordCallback} />
+
+      {/* Admin routes */}
       <Route path="/admin/login" component={Login} />
       <Route path="/admin/*">
         <AdminLayout>
@@ -52,12 +61,13 @@ function Router() {
             <Route path="/admin/backups" component={Backups} />
             <Route path="/admin/config" component={Config} />
             <Route path="/admin/giveaways" component={Giveaways} />
-            <Route path="/admin/games" component={Games} />
+            <Route path="/admin/games" component={AdminGames} />
             <Route path="/admin/docs" component={Docs} />
             <Route component={NotFound} />
           </Switch>
         </AdminLayout>
       </Route>
+
       <Route component={NotFound} />
     </Switch>
   );

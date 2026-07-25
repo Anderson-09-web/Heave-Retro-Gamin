@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -52,100 +52,198 @@
 
   --font-sans: var(--app-font-sans);
   --font-mono: var(--app-font-mono);
+  --font-pixel: var(--app-font-pixel);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 }
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 9%;
-  --card-border: 240 6% 90%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 9%;
-  --popover-border: 240 6% 90%;
-  --primary: 245 82% 60%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 240 5% 96%;
-  --secondary-foreground: 240 6% 10%;
-  --muted: 240 5% 96%;
-  --muted-foreground: 240 4% 46%;
-  --accent: 245 82% 60%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 240 6% 90%;
-  --input: 240 6% 90%;
-  --ring: 245 82% 60%;
-  
-  --sidebar: 240 10% 4%;
-  --sidebar-foreground: 240 5% 96%;
-  --sidebar-border: 240 6% 15%;
-  --sidebar-primary: 245 82% 60%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 6% 15%;
-  --sidebar-accent-foreground: 240 5% 96%;
-  --sidebar-ring: 245 82% 60%;
+  /* Retro black/cyan/magenta palette */
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 4%;
+  --card-foreground: 0 0% 100%;
+  --card-border: 180 100% 50% / 0.3;
+  --popover: 0 0% 4%;
+  --popover-foreground: 0 0% 100%;
+  --popover-border: 180 100% 50% / 0.3;
 
-  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
+  /* Cyan as primary */
+  --primary: 180 100% 50%;
+  --primary-foreground: 0 0% 0%;
+
+  --secondary: 0 0% 8%;
+  --secondary-foreground: 180 100% 50%;
+
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 55%;
+
+  /* Magenta as accent */
+  --accent: 300 100% 50%;
+  --accent-foreground: 0 0% 0%;
+
+  --destructive: 0 100% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 180 100% 50% / 0.25;
+  --input: 0 0% 8%;
+  --ring: 180 100% 50%;
+
+  --sidebar: 0 0% 2%;
+  --sidebar-foreground: 0 0% 90%;
+  --sidebar-border: 180 100% 50% / 0.2;
+  --sidebar-primary: 180 100% 50%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 0 0% 8%;
+  --sidebar-accent-foreground: 180 100% 50%;
+  --sidebar-ring: 180 100% 50%;
+
+  --app-font-sans: 'Space Mono', monospace;
   --app-font-mono: 'Space Mono', monospace;
-  --radius: 0.5rem;
-  
-  --chart-1: 245 82% 60%;
-  --chart-2: 260 82% 60%;
-  --chart-3: 270 82% 60%;
-  --chart-4: 280 82% 60%;
-  --chart-5: 290 82% 60%;
-}
+  --app-font-pixel: 'Press Start 2P', monospace;
+  --radius: 0px;
 
-.dark {
-  --background: 240 10% 4%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 6%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 240 6% 15%;
-  --popover: 240 10% 6%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 240 6% 15%;
-  --primary: 245 82% 65%;
-  --primary-foreground: 240 10% 4%;
-  --secondary: 240 6% 15%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 6% 15%;
-  --muted-foreground: 240 5% 65%;
-  --accent: 245 82% 65%;
-  --accent-foreground: 240 10% 4%;
-  --destructive: 0 62% 50%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 6% 15%;
-  --input: 240 6% 15%;
-  --ring: 245 82% 65%;
-  
-  --sidebar: 240 10% 4%;
-  --sidebar-foreground: 240 5% 96%;
-  --sidebar-border: 240 6% 15%;
-  --sidebar-primary: 245 82% 65%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 6% 15%;
-  --sidebar-accent-foreground: 240 5% 96%;
-  --sidebar-ring: 245 82% 65%;
+  --chart-1: 180 100% 50%;
+  --chart-2: 300 100% 50%;
+  --chart-3: 60 100% 50%;
+  --chart-4: 120 100% 50%;
+  --chart-5: 30 100% 50%;
 
-  --chart-1: 245 82% 65%;
-  --chart-2: 260 82% 65%;
-  --chart-3: 270 82% 65%;
-  --chart-4: 280 82% 65%;
-  --chart-5: 290 82% 65%;
+  /* Retro glow colors */
+  --cyan: #00ffff;
+  --magenta: #ff00ff;
+  --yellow: #ffff00;
 }
 
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-mono antialiased bg-background text-foreground;
+    image-rendering: pixelated;
+  }
+
+  /* Pixel borders */
+  .pixel-border {
+    box-shadow:
+      -2px 0 0 0 var(--cyan),
+       2px 0 0 0 var(--cyan),
+       0 -2px 0 0 var(--cyan),
+       0  2px 0 0 var(--cyan);
+  }
+
+  .pixel-border-magenta {
+    box-shadow:
+      -2px 0 0 0 var(--magenta),
+       2px 0 0 0 var(--magenta),
+       0 -2px 0 0 var(--magenta),
+       0  2px 0 0 var(--magenta);
+  }
+
+  /* Scanline overlay */
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Glitch text effect */
+  .glitch {
+    position: relative;
+  }
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .glitch::before {
+    color: var(--cyan);
+    animation: glitch-1 3s infinite;
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+    transform: translate(-2px, 0);
+  }
+  .glitch::after {
+    color: var(--magenta);
+    animation: glitch-2 3s infinite;
+    clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+    transform: translate(2px, 0);
+  }
+
+  @keyframes glitch-1 {
+    0%, 90%, 100% { transform: translate(-2px, 0); opacity: 0; }
+    92% { transform: translate(-4px, 0); opacity: 1; }
+    94% { transform: translate(0px, 0); opacity: 0; }
+    96% { transform: translate(-2px, 0); opacity: 1; }
+    98% { opacity: 0; }
+  }
+  @keyframes glitch-2 {
+    0%, 90%, 100% { transform: translate(2px, 0); opacity: 0; }
+    91% { transform: translate(4px, 0); opacity: 1; }
+    93% { transform: translate(0px, 0); opacity: 0; }
+    95% { transform: translate(2px, 0); opacity: 1; }
+    97% { opacity: 0; }
+  }
+
+  /* Retro blink cursor */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .blink { animation: blink 1s step-end infinite; }
+
+  /* Cyan glow */
+  .glow-cyan {
+    text-shadow: 0 0 8px var(--cyan), 0 0 20px var(--cyan);
+  }
+  .glow-magenta {
+    text-shadow: 0 0 8px var(--magenta), 0 0 20px var(--magenta);
+  }
+
+  /* Retro button */
+  .retro-btn {
+    border: 2px solid var(--cyan);
+    color: var(--cyan);
+    background: transparent;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 12px 24px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: background 0.1s, color 0.1s, box-shadow 0.1s;
+    position: relative;
+  }
+  .retro-btn:hover {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 12px var(--cyan), 0 0 30px var(--cyan);
+  }
+
+  .retro-btn-magenta {
+    border-color: var(--magenta);
+    color: var(--magenta);
+  }
+  .retro-btn-magenta:hover {
+    background: var(--magenta);
+    color: #000;
+    box-shadow: 0 0 12px var(--magenta), 0 0 30px var(--magenta);
   }
 }
