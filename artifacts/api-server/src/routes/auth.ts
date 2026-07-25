@@ -96,10 +96,12 @@ const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 
 function getDiscordRedirectUri(req: import("express").Request): string {
-  const host = process.env.REPLIT_DEV_DOMAIN
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : `${req.protocol}://${req.get("host")}`;
-  return `${host}/api/auth/discord/callback`;
+  // APP_URL is set explicitly on Render/production. Falls back to Replit dev domain, then request host.
+  const base =
+    process.env.APP_URL ??
+    (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ??
+    `${req.protocol}://${req.get("host")}`;
+  return `${base}/api/auth/discord/callback`;
 }
 
 /**

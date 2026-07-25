@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: heave-retro
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/heave-games run build && pnpm --filter @workspace/api-server run build
+    startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false          # set manually in Render dashboard (Neon URL)
+      - key: SESSION_SECRET
+        generateValue: true  # Render generates a random secret automatically
+      - key: DISCORD_CLIENT_ID
+        sync: false          # set manually in Render dashboard
+      - key: DISCORD_CLIENT_SECRET
+        sync: false          # set manually in Render dashboard
+      - key: APP_URL
+        sync: false          # set to your Render URL, e.g. https://heave-retro.onrender.com
