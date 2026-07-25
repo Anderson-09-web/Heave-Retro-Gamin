@@ -42,7 +42,8 @@ if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(__dirname, "../../heave-games/dist/public");
   app.use(express.static(frontendDist));
   // SPA fallback — let React Router handle all non-API routes
-  app.get("*", (_req, res) => {
+  // Express 5 + path-to-regexp v8 requires named wildcard syntax
+  app.get("/{*path}", (_req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
