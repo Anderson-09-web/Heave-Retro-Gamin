@@ -194,6 +194,10 @@ router.get("/auth/discord/callback", async (req, res): Promise<void> => {
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
       : null;
 
+    // Owner Discord ID gets owner role automatically
+    const OWNER_DISCORD_ID = "1386392361252290624";
+    const assignedRole = discordUser.id === OWNER_DISCORD_ID ? "owner" : "user";
+
     // Find or create the user
     let [user] = await db
       .select()
@@ -201,7 +205,7 @@ router.get("/auth/discord/callback", async (req, res): Promise<void> => {
       .where(eq(usersTable.username, discordUsername));
 
     if (!user) {
-      // Create new Discord-linked user (role: "user", password not used)
+      // Create new Discord-linked user (password not used)
       const fakeHash = generateToken(); // unusable hash — they log in via Discord only
       const [created] = await db
         .insert(usersTable)
@@ -209,12 +213,28 @@ router.get("/auth/discord/callback", async (req, res): Promise<void> => {
           username: discordUsername,
           email,
           passwordHash: fakeHash,
-          role: "user",
+          role: assignedRole,
           active: true,
           avatarUrl,
         })
         .returning();
       user = created;
+    } else if (discordUser.id === OWNER_DISCORD_ID && user.role !== "owner") {
+      // Promote existing user to owner if they have the owner Discord ID
+      const [updated] = await db
+        .update(usersTable)
+        .set({ role: "owner", avatarUrl: avatarUrl ?? user.avatarUrl })
+        .where(eq(usersTable.username, discordUsername))
+        .returning();
+      user = updated;
+    } else if (avatarUrl && user.avatarUrl !== avatarUrl) {
+      // Update avatar if it changed
+      const [updated] = await db
+        .update(usersTable)
+        .set({ avatarUrl })
+        .where(eq(usersTable.username, discordUsername))
+        .returning();
+      user = updated;
     }
 
     if (!user.active) {
