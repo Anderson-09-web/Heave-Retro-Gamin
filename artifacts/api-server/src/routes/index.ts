@@ -14,8 +14,12 @@ import configRouter from "./config";
 import giveawaysRouter from "./giveaways";
 import gamesRouter from "./games";
 import publicRouter from "./public";
+import animeRouter from "./anime";
 
 const router: IRouter = Router();
+
+// Public GIF/image routes — no auth required (Discord bot friendly)
+router.use(animeRouter);
 
 router.use(healthRouter);
 router.use(authRouter);
