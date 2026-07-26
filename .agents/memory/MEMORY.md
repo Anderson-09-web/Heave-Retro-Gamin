@@ -1,0 +1,1 @@
+- [Imported workflow verification](imported-workflows.md) — imported artifact configs may exist even when no managed workflows are registered in the current workspace.

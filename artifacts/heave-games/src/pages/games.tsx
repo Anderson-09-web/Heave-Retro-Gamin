@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
 import { Link, useLocation } from "wouter";
 import { Gamepad2, Loader2, X, LogOut, ChevronRight } from "lucide-react";
 
@@ -626,9 +625,10 @@ function GameModal({ slug, name, onClose }: { slug: string; name: string; onClos
     </div>
   );
 
-  // Render into document.body via portal to avoid removeChild conflicts
-  // caused by React reconciling the modal alongside route transitions.
-  return ReactDOM.createPortal(modal, document.body);
+  // Keep the modal in the page tree. A body portal can be removed by React
+  // after a route transition has already replaced the page root, which causes
+  // the browser's "removeChild" DOM exception.
+  return modal;
 }
 
 // ── Main Games Page ───────────────────────────────────────────────────────────
@@ -673,7 +673,7 @@ export default function Games() {
 
   const handlePlay = (slug: string, name: string, active: boolean) => {
     if (!active) return;
-    if (slug === "tictactoe" || slug === "connect4") {
+    if (["tictactoe", "connect4", "snake", "memory"].includes(slug)) {
       setActiveGame({ slug, name });
       return;
     }

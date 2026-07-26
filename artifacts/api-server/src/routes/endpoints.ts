@@ -45,22 +45,28 @@ function mapEndpoint(e: typeof apiEndpointsTable.$inferSelect): MappedEndpoint {
 /**
  * GET /endpoints
  *
- * Returns DB rows when available. If the DB is unreachable or the table is
- * empty (first boot before seed), falls back to the full built-in list so
- * the admin docs panel is never blank.
+ * Returns the complete documented catalog. Database rows win for an endpoint
+ * already present there so request counters, active state, and admin edits are
+ * preserved; built-in rows fill any documentation missing from the database.
+ * This keeps the docs complete even when the startup seed was interrupted.
  */
 router.get("/endpoints", async (_req, res): Promise<void> => {
   try {
     const rows = await db.select().from(apiEndpointsTable).orderBy(apiEndpointsTable.path);
-    if (rows.length > 0) {
-      res.json(rows.map(mapEndpoint));
-      return;
-    }
+    const dbEndpoints = rows.map(mapEndpoint);
+    const existing = new Set(dbEndpoints.map((endpoint) => `${endpoint.method.toUpperCase()} ${endpoint.path}`));
+    const missingBuiltins = builtinToApiShape()
+      .filter((endpoint) => !existing.has(`${endpoint.method.toUpperCase()} ${endpoint.path}`));
+
+    res.json([...dbEndpoints, ...missingBuiltins].sort((a, b) =>
+      `${a.path}:${a.method}`.localeCompare(`${b.path}:${b.method}`),
+    ));
+    return;
   } catch {
-    // DB unavailable — fall through to builtin list
+    // DB unavailable — return the complete built-in catalog below.
   }
 
-  // No DB rows: return built-in endpoint docs so the panel is never blank
+  // No DB connection: return built-in endpoint docs so the panel is never blank.
   res.json(builtinToApiShape());
 });
 

@@ -38,10 +38,24 @@ export async function autoSeedEndpoints(): Promise<void> {
       if (rows[0]) catIdBySlug[cat.slug] = rows[0].id;
     }
 
-    // 2. Upsert endpoint documentation (skip if already exists)
+    // 2. Add endpoint documentation only when its method/path is missing.
+    // api_endpoints has no composite unique constraint, so ON CONFLICT alone
+    // cannot prevent duplicate rows on every Render restart.
+    const existingRows = await db
+      .select({
+        path: apiEndpointsTable.path,
+        method: apiEndpointsTable.method,
+      })
+      .from(apiEndpointsTable);
+    const existingEndpoints = new Set(
+      existingRows.map((row) => `${row.method.toUpperCase()} ${row.path}`),
+    );
+
     for (const ep of BUILTIN_ENDPOINTS) {
       const catId = catIdBySlug[ep.categorySlug] ?? catIdBySlug["utils"];
       if (!catId) continue;
+      const key = `${ep.method.toUpperCase()} ${ep.path}`;
+      if (existingEndpoints.has(key)) continue;
 
       await db
         .insert(apiEndpointsTable)
@@ -55,7 +69,8 @@ export async function autoSeedEndpoints(): Promise<void> {
           responseJson: ep.response,
           requiresAuth: ep.requiresAuth,
         })
-        .onConflictDoNothing();
+        .execute();
+      existingEndpoints.add(key);
     }
 
     logger.info(
