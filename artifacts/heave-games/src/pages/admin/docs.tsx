@@ -79,7 +79,7 @@ export default function Docs() {
       <div className="flex-1 space-y-8 min-w-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">REST API Endpoints</h1>
-          <p className="text-muted-foreground">Base URL: <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">https://api.heavegames.com</code></p>
+          <p className="text-muted-foreground">Base URL: <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">{window.location.origin}</code></p>
         </div>
 
         {filteredEndpoints?.length === 0 ? (
@@ -101,7 +101,7 @@ export default function Docs() {
                     {ep.requiresAuth && (
                       <Badge variant="outline" className="border-orange-500/20 text-orange-500 bg-orange-500/10">Auth Required</Badge>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(`https://api.heavegames.com${ep.path}`, "Path")}>
+                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(`${window.location.origin}${ep.path}`, "Path")}>
                       <Copy className="w-4 h-4 mr-2" />
                       Copy Path
                     </Button>
@@ -142,7 +142,7 @@ export default function Docs() {
                         <pre className="bg-zinc-950 p-4 rounded-xl overflow-x-auto text-xs font-mono text-blue-300 border border-zinc-800 h-full">
                           <code>{`const fetch = require('node-fetch');
 
-const response = await fetch('https://api.heavegames.com${ep.path}', {
+const response = await fetch('${window.location.origin}${ep.path}', {
   method: '${ep.method}',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY'
@@ -155,7 +155,7 @@ console.log(data);`}</code>
                           variant="ghost" 
                           size="icon" 
                           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-white"
-                          onClick={() => copyToClipboard(`...`, "Code")}
+                          onClick={() => copyToClipboard(`const fetch = require('node-fetch');\n\nconst response = await fetch('${window.location.origin}${ep.path}', {\n  method: '${ep.method}',\n  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }\n});\nconst data = await response.json();\nconsole.log(data);`, "Code")}
                         >
                           <Copy className="w-4 h-4" />
                         </Button>

@@ -4,19 +4,24 @@ services:
     runtime: node
     region: oregon
     plan: free
-    buildCommand: pnpm install --frozen-lockfile && BASE_PATH=/ pnpm --filter @workspace/heave-games run build && pnpm --filter @workspace/api-server run build
-    startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    # PORT is injected by Render automatically at runtime.
+    # BASE_PATH is only needed for the Vite dev server (not the build).
+    buildCommand: >
+      pnpm install --frozen-lockfile &&
+      BASE_PATH=/ pnpm --filter @workspace/heave-games run build &&
+      pnpm --filter @workspace/api-server run build
+    startCommand: NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false          # set manually in Render dashboard (Neon URL)
+        sync: false          # set in Render dashboard — Neon / Supabase / Render Postgres URL
       - key: SESSION_SECRET
-        generateValue: true  # Render generates a random secret automatically
+        generateValue: true  # Render generates a random secret
       - key: DISCORD_CLIENT_ID
-        sync: false          # set manually in Render dashboard
+        sync: false          # from Discord Developer Portal
       - key: DISCORD_CLIENT_SECRET
-        sync: false          # set manually in Render dashboard
+        sync: false          # from Discord Developer Portal
       - key: APP_URL
-        sync: false          # set to your Render URL, e.g. https://heave-retro.onrender.com
+        sync: false          # e.g. https://heave-retro.onrender.com
