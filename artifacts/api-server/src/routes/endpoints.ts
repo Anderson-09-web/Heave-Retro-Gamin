@@ -8,10 +8,25 @@ import {
   DeleteApiEndpointParams,
   ToggleApiEndpointParams,
 } from "@workspace/api-zod";
+import { builtinToApiShape } from "../lib/builtin-endpoints";
 
 const router: IRouter = Router();
 
-function mapEndpoint(e: typeof apiEndpointsTable.$inferSelect) {
+type MappedEndpoint = {
+  id: number;
+  path: string;
+  method: string;
+  description: string;
+  active: boolean;
+  categoryId: number;
+  requestCount: number;
+  responseJson: string;
+  requiresAuth: boolean;
+  rateLimit: number | null;
+  createdAt: string;
+};
+
+function mapEndpoint(e: typeof apiEndpointsTable.$inferSelect): MappedEndpoint {
   return {
     id: e.id,
     path: e.path,
@@ -27,9 +42,26 @@ function mapEndpoint(e: typeof apiEndpointsTable.$inferSelect) {
   };
 }
 
+/**
+ * GET /endpoints
+ *
+ * Returns DB rows when available. If the DB is unreachable or the table is
+ * empty (first boot before seed), falls back to the full built-in list so
+ * the admin docs panel is never blank.
+ */
 router.get("/endpoints", async (_req, res): Promise<void> => {
-  const endpoints = await db.select().from(apiEndpointsTable).orderBy(apiEndpointsTable.path);
-  res.json(endpoints.map(mapEndpoint));
+  try {
+    const rows = await db.select().from(apiEndpointsTable).orderBy(apiEndpointsTable.path);
+    if (rows.length > 0) {
+      res.json(rows.map(mapEndpoint));
+      return;
+    }
+  } catch {
+    // DB unavailable — fall through to builtin list
+  }
+
+  // No DB rows: return built-in endpoint docs so the panel is never blank
+  res.json(builtinToApiShape());
 });
 
 router.post("/endpoints", async (req, res): Promise<void> => {

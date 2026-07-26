@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { autoSeedEndpoints } from "./lib/auto-seed";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,8 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Populate categories + endpoint docs automatically on every boot.
+  // Uses ON CONFLICT DO NOTHING so existing data is never overwritten.
+  autoSeedEndpoints();
 });
